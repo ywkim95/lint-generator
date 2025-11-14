@@ -36,7 +36,6 @@ export function useCodePreview(
       try {
         if (tool === 'prettier') {
           const config = generatePrettierConfig(rules);
-          console.log('[useCodePreview] Prettier config:', config);
           const formatted = await formatWithPrettier(sampleCode, config);
 
           setExampleCode({
