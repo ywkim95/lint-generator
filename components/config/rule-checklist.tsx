@@ -5,15 +5,27 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { ConfigRule } from '@/types/rule';
+import { ConfigPreset } from '@/types/preset';
+import PresetSelector from './preset-selector';
+import { usePreset } from '@/hooks/use-preset';
 
 interface RuleChecklistProps {
   tool: 'prettier' | 'eslint';
   rules: ConfigRule[];
+  currentPresetId: ConfigPreset['id'];
   onToggleRule: (ruleId: string) => void;
+  onPresetChange: (presetId: ConfigPreset['id']) => void;
 }
 
-export default function RuleChecklist({ tool, rules, onToggleRule }: RuleChecklistProps) {
+export default function RuleChecklist({
+  tool,
+  rules,
+  currentPresetId,
+  onToggleRule,
+  onPresetChange
+}: RuleChecklistProps) {
   const toolName = tool === 'prettier' ? 'Prettier' : 'ESLint';
+  const { presets } = usePreset(tool, currentPresetId);
 
   return (
     <Card className="h-full">
@@ -23,7 +35,13 @@ export default function RuleChecklist({ tool, rules, onToggleRule }: RuleCheckli
           {toolName} 설정 규칙을 선택하세요
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        <PresetSelector
+          presets={presets}
+          currentPresetId={currentPresetId}
+          onPresetChange={onPresetChange}
+          tool={tool}
+        />
         <ScrollArea className="h-[600px] pr-4">
           <div className="space-y-4">
             {rules.map((rule) => (

@@ -34,7 +34,9 @@ export default function Home() {
           <RuleChecklist
             tool={state.currentTool}
             rules={currentRules}
+            currentPresetId={state.currentPreset}
             onToggleRule={actions.toggleRule}
+            onPresetChange={actions.setCurrentPreset}
           />
 
           <CodePreview
