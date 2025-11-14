@@ -190,9 +190,39 @@ function configReducer(state: AppState, action: Action): AppState {
         );
         return { ...state, prettierRules: updatedRules };
       } else {
-        const updatedRules = state.eslintRules.map((rule) =>
-          rule.id === ruleId ? { ...rule, value } : rule
-        );
+        const updatedRules = state.eslintRules.map((rule) => {
+          if (rule.id !== ruleId) return rule;
+
+          // ESLint 규칙 업데이트
+          if (rule.eslintRule) {
+            // severity 값 업데이트 (off, warn, error)
+            if (value === 'off' || value === 'warn' || value === 'error') {
+              return {
+                ...rule,
+                value,
+                eslintRule: {
+                  ...rule.eslintRule,
+                  severity: value,
+                },
+              };
+            }
+
+            // 옵션 값 업데이트 (quotes, semi, comma-dangle, etc.)
+            const currentOptions = rule.eslintRule.options || [];
+            const newOptions = [value, ...currentOptions.slice(1)];
+
+            return {
+              ...rule,
+              value,
+              eslintRule: {
+                ...rule.eslintRule,
+                options: newOptions,
+              },
+            };
+          }
+
+          return { ...rule, value };
+        });
         return { ...state, eslintRules: updatedRules };
       }
     }
@@ -288,9 +318,19 @@ function getRuleName(key: string): string {
     embeddedLanguageFormatting: '내장 언어 포맷팅',
     singleAttributePerLine: '속성 한 줄에 하나',
     // ESLint 규칙
-    'no-console': 'console 사용 금지',
-    quotes: '따옴표 스타일',
+    'indent': '들여쓰기',
+    'quotes': '따옴표 스타일',
+    'semi': '세미콜론',
     'comma-dangle': '후행 쉼표',
+    'no-console': 'console 사용',
+    'no-unused-vars': '사용하지 않는 변수',
+    'no-undef': '정의되지 않은 변수',
+    'eqeqeq': '동등 비교 연산자',
+    'curly': '중괄호 사용',
+    'brace-style': '중괄호 스타일',
+    'arrow-parens': '화살표 함수 괄호',
+    'prefer-const': 'const 사용 권장',
+    'no-var': 'var 사용 금지',
   };
 
   return names[key] || key;
@@ -317,9 +357,19 @@ function getRuleDescription(key: string): string {
     embeddedLanguageFormatting: '내장된 코드를 포맷팅합니다 (auto, off)',
     singleAttributePerLine: 'HTML/JSX 속성을 한 줄에 하나씩 배치합니다',
     // ESLint 규칙
-    'no-console': 'console.log 등의 사용을 경고합니다',
-    quotes: '문자열 따옴표 스타일을 지정합니다',
-    'comma-dangle': '후행 쉼표 사용 규칙을 지정합니다',
+    'indent': '코드 블록의 들여쓰기 수준을 지정합니다 (2, 4 등)',
+    'quotes': '문자열 따옴표 스타일을 지정합니다 (single, double, backtick)',
+    'semi': '문장 끝에 세미콜론 사용 여부를 지정합니다 (always, never)',
+    'comma-dangle': '객체/배열의 마지막 항목 뒤에 쉼표를 추가합니다 (never, always, always-multiline, only-multiline)',
+    'no-console': 'console 사용을 제한합니다 (off, warn, error)',
+    'no-unused-vars': '선언했지만 사용하지 않는 변수를 감지합니다 (off, warn, error)',
+    'no-undef': '정의되지 않은 변수 사용을 금지합니다 (off, warn, error)',
+    'eqeqeq': '===와 !== 사용을 강제합니다 (off, warn, error)',
+    'curly': 'if, else 등에 중괄호 사용을 강제합니다 (off, warn, error)',
+    'brace-style': '중괄호 스타일을 지정합니다 (1tbs, stroustrup, allman)',
+    'arrow-parens': '화살표 함수 매개변수에 괄호 사용을 지정합니다 (always, as-needed)',
+    'prefer-const': '재할당하지 않는 변수에 const 사용을 권장합니다 (off, warn, error)',
+    'no-var': 'var 대신 let/const 사용을 강제합니다 (off, warn, error)',
   };
 
   return descriptions[key] || '';
