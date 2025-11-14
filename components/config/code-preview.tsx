@@ -35,10 +35,43 @@ export default function CodePreview({ exampleCode, isFormatting, error }: CodePr
             </div>
           </div>
         ) : exampleCode ? (
-          <CodeDisplay
-            code={exampleCode.formatted}
-            language={exampleCode.language}
-          />
+          <div className="space-y-4">
+            <CodeDisplay
+              code={exampleCode.formatted}
+              language={exampleCode.language}
+            />
+
+            {/* ESLint 메시지 표시 */}
+            {exampleCode.tool === 'eslint' && exampleCode.lintMessages && exampleCode.lintMessages.length > 0 && (
+              <div className="border-t pt-4">
+                <h4 className="text-sm font-semibold mb-2">린팅 결과</h4>
+                <div className="space-y-2">
+                  {exampleCode.lintMessages.map((msg, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-2 rounded text-sm ${
+                        msg.severity === 'error'
+                          ? 'bg-destructive/10 text-destructive border border-destructive/20'
+                          : 'bg-yellow-50 text-yellow-800 border border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-200 dark:border-yellow-800/30'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="font-mono text-xs opacity-70">
+                          {msg.line}:{msg.column}
+                        </span>
+                        <div className="flex-1">
+                          <p className="font-medium">
+                            {msg.severity === 'error' ? '❌' : '⚠️'} {msg.message}
+                          </p>
+                          <p className="text-xs opacity-70 mt-1">{msg.ruleId}</p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         ) : (
           <div className="flex items-center justify-center h-[600px]">
             <p className="text-sm text-muted-foreground">

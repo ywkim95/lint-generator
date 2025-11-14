@@ -4,7 +4,8 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { ConfigRule } from '@/types/rule';
 import { ExampleCode } from '@/types/config';
 import { formatWithPrettier } from '@/lib/formatters/prettier-formatter';
-import { generatePrettierConfig } from '@/lib/generators/config-generator';
+import { lintWithESLint } from '@/lib/formatters/eslint-formatter';
+import { generatePrettierConfig, generateESLintConfig } from '@/lib/generators/config-generator';
 import sampleCode from '@/public/examples/sample-code';
 
 /**
@@ -44,13 +45,16 @@ export function useCodePreview(
             language: 'typescript',
           });
         } else {
-          // ESLint 미리보기는 향후 구현 (User Story 2)
+          // ESLint 린팅
+          const config = generateESLintConfig(currentRules);
+          const lintMessages = lintWithESLint(sampleCode, config);
+
           setExampleCode({
             original: sampleCode,
             formatted: sampleCode,
             tool: 'eslint',
             language: 'typescript',
-            lintMessages: [],
+            lintMessages,
           });
         }
       } catch (err) {
