@@ -25,7 +25,7 @@ export interface AppActions {
   setCurrentTool: (tool: 'prettier' | 'eslint') => void;
   setCurrentPreset: (preset: ConfigPreset['id']) => void;
   toggleRule: (ruleId: string) => void;
-  updateRuleValue: (ruleId: string, value: any) => void;
+  updateRuleValue: (ruleId: string, value: string | number | boolean) => void;
   resetToPreset: () => void;
   downloadConfig: () => void;
   setExampleCode: (code: ExampleCode | null) => void;
@@ -39,7 +39,7 @@ type Action =
   | { type: 'SET_TOOL'; payload: 'prettier' | 'eslint' }
   | { type: 'SET_PRESET'; payload: ConfigPreset['id'] }
   | { type: 'TOGGLE_RULE'; payload: string }
-  | { type: 'UPDATE_RULE'; payload: { ruleId: string; value: any } }
+  | { type: 'UPDATE_RULE'; payload: { ruleId: string; value: string | number | boolean } }
   | { type: 'RESET_PRESET' }
   | { type: 'SET_EXAMPLE_CODE'; payload: ExampleCode | null }
   | { type: 'SET_IS_FORMATTING'; payload: boolean }
@@ -190,9 +190,39 @@ function configReducer(state: AppState, action: Action): AppState {
         );
         return { ...state, prettierRules: updatedRules };
       } else {
-        const updatedRules = state.eslintRules.map((rule) =>
-          rule.id === ruleId ? { ...rule, value } : rule
-        );
+        const updatedRules = state.eslintRules.map((rule) => {
+          if (rule.id !== ruleId) return rule;
+
+          // ESLint 규칙 업데이트
+          if (rule.eslintRule) {
+            // severity 값 업데이트 (off, warn, error)
+            if (value === 'off' || value === 'warn' || value === 'error') {
+              return {
+                ...rule,
+                value,
+                eslintRule: {
+                  ...rule.eslintRule,
+                  severity: value,
+                },
+              };
+            }
+
+            // 옵션 값 업데이트 (quotes, semi, comma-dangle, etc.)
+            const currentOptions = rule.eslintRule.options || [];
+            const newOptions = [value, ...currentOptions.slice(1)];
+
+            return {
+              ...rule,
+              value,
+              eslintRule: {
+                ...rule.eslintRule,
+                options: newOptions,
+              },
+            };
+          }
+
+          return { ...rule, value };
+        });
         return { ...state, eslintRules: updatedRules };
       }
     }
@@ -269,14 +299,38 @@ export function useConfigState() {
 
 function getRuleName(key: string): string {
   const names: Record<string, string> = {
+    // Prettier 규칙
+    printWidth: '줄 길이',
+    tabWidth: '탭 너비',
+    useTabs: '탭 사용',
     semi: '세미콜론 사용',
     singleQuote: '작은따옴표 사용',
-    tabWidth: '탭 너비',
-    printWidth: '줄 길이',
+    quoteProps: '객체 속성 따옴표',
+    jsxSingleQuote: 'JSX 작은따옴표',
     trailingComma: '후행 쉼표',
-    'no-console': 'console 사용 금지',
-    quotes: '따옴표 스타일',
+    bracketSpacing: '중괄호 공백',
+    bracketSameLine: '닫는 괄호 같은 줄',
+    arrowParens: '화살표 함수 괄호',
+    proseWrap: '산문 줄 바꿈',
+    htmlWhitespaceSensitivity: 'HTML 공백 민감도',
+    vueIndentScriptAndStyle: 'Vue 스크립트/스타일 들여쓰기',
+    endOfLine: '줄 끝 문자',
+    embeddedLanguageFormatting: '내장 언어 포맷팅',
+    singleAttributePerLine: '속성 한 줄에 하나',
+    // ESLint 규칙
+    'indent': '들여쓰기',
+    'quotes': '따옴표 스타일',
+    'semi': '세미콜론',
     'comma-dangle': '후행 쉼표',
+    'no-console': 'console 사용',
+    'no-unused-vars': '사용하지 않는 변수',
+    'no-undef': '정의되지 않은 변수',
+    'eqeqeq': '동등 비교 연산자',
+    'curly': '중괄호 사용',
+    'brace-style': '중괄호 스타일',
+    'arrow-parens': '화살표 함수 괄호',
+    'prefer-const': 'const 사용 권장',
+    'no-var': 'var 사용 금지',
   };
 
   return names[key] || key;
@@ -284,14 +338,38 @@ function getRuleName(key: string): string {
 
 function getRuleDescription(key: string): string {
   const descriptions: Record<string, string> = {
+    // Prettier 규칙
+    printWidth: '한 줄의 최대 길이를 지정합니다 (기본값: 80)',
+    tabWidth: '들여쓰기 공백 수를 지정합니다 (기본값: 2)',
+    useTabs: '공백 대신 탭을 사용합니다',
     semi: '문장 끝에 세미콜론을 추가합니다',
-    singleQuote: '문자열에 작은따옴표를 사용합니다',
-    tabWidth: '들여쓰기 공백 수를 지정합니다',
-    printWidth: '한 줄의 최대 길이를 지정합니다',
-    trailingComma: '객체/배열의 마지막 항목 뒤에 쉼표를 추가합니다',
-    'no-console': 'console.log 등의 사용을 경고합니다',
-    quotes: '문자열 따옴표 스타일을 지정합니다',
-    'comma-dangle': '후행 쉼표 사용 규칙을 지정합니다',
+    singleQuote: '큰따옴표 대신 작은따옴표를 사용합니다',
+    quoteProps: '객체 속성에 따옴표 사용 여부를 지정합니다 (as-needed, consistent, preserve)',
+    jsxSingleQuote: 'JSX에서 큰따옴표 대신 작은따옴표를 사용합니다',
+    trailingComma: '객체/배열의 마지막 항목 뒤에 쉼표를 추가합니다 (es5, none, all)',
+    bracketSpacing: '객체 리터럴의 중괄호 안에 공백을 추가합니다',
+    bracketSameLine: '여러 줄 HTML/JSX 요소의 닫는 > 를 마지막 줄에 배치합니다',
+    arrowParens: '화살표 함수의 매개변수에 괄호를 추가합니다 (always, avoid)',
+    proseWrap: '마크다운 텍스트를 줄 바꿈합니다 (always, never, preserve)',
+    htmlWhitespaceSensitivity: 'HTML 공백 처리 방식을 지정합니다 (css, strict, ignore)',
+    vueIndentScriptAndStyle: 'Vue 파일의 <script>와 <style> 태그 내용을 들여씁니다',
+    endOfLine: '줄 끝 문자를 지정합니다 (lf, crlf, cr, auto)',
+    embeddedLanguageFormatting: '내장된 코드를 포맷팅합니다 (auto, off)',
+    singleAttributePerLine: 'HTML/JSX 속성을 한 줄에 하나씩 배치합니다',
+    // ESLint 규칙
+    'indent': '코드 블록의 들여쓰기 수준을 지정합니다 (2, 4 등)',
+    'quotes': '문자열 따옴표 스타일을 지정합니다 (single, double, backtick)',
+    'semi': '문장 끝에 세미콜론 사용 여부를 지정합니다 (always, never)',
+    'comma-dangle': '객체/배열의 마지막 항목 뒤에 쉼표를 추가합니다 (never, always, always-multiline, only-multiline)',
+    'no-console': 'console 사용을 제한합니다 (off, warn, error)',
+    'no-unused-vars': '선언했지만 사용하지 않는 변수를 감지합니다 (off, warn, error)',
+    'no-undef': '정의되지 않은 변수 사용을 금지합니다 (off, warn, error)',
+    'eqeqeq': '===와 !== 사용을 강제합니다 (off, warn, error)',
+    'curly': 'if, else 등에 중괄호 사용을 강제합니다 (off, warn, error)',
+    'brace-style': '중괄호 스타일을 지정합니다 (1tbs, stroustrup, allman)',
+    'arrow-parens': '화살표 함수 매개변수에 괄호 사용을 지정합니다 (always, as-needed)',
+    'prefer-const': '재할당하지 않는 변수에 const 사용을 권장합니다 (off, warn, error)',
+    'no-var': 'var 대신 let/const 사용을 강제합니다 (off, warn, error)',
   };
 
   return descriptions[key] || '';

@@ -4,12 +4,13 @@ import { PrettierConfig, ESLintConfigContent, ConfigFile } from '@/types/config'
 /**
  * 선택된 규칙으로 Prettier 설정 객체를 생성합니다.
  *
- * @param rules - 활성화된 Prettier 규칙 목록
+ * @param rules - Prettier 규칙 목록
  * @returns Prettier 설정 객체
  *
  * @validation
- * - 비활성화된 규칙은 무시
- * - 값이 없는 규칙은 defaultValue 사용
+ * - 활성화된 규칙만 설정에 포함
+ * - 설정된 값 또는 기본값 사용
+ * - 비활성화된 규칙은 Prettier 기본 동작 사용
  */
 export function generatePrettierConfig(rules: ConfigRule[]): PrettierConfig {
   const config: PrettierConfig = {};
