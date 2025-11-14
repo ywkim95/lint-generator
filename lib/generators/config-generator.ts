@@ -4,21 +4,34 @@ import { PrettierConfig, ESLintConfigContent, ConfigFile } from '@/types/config'
 /**
  * 선택된 규칙으로 Prettier 설정 객체를 생성합니다.
  *
- * @param rules - 활성화된 Prettier 규칙 목록
+ * @param rules - Prettier 규칙 목록
  * @returns Prettier 설정 객체
  *
  * @validation
- * - 비활성화된 규칙은 무시
- * - 값이 없는 규칙은 defaultValue 사용
+ * - 모든 규칙을 설정에 포함
+ * - 활성화된 규칙: 설정된 값 또는 기본값 사용
+ * - 비활성화된 boolean 규칙: 기본값의 반대 값 사용
+ * - 비활성화된 non-boolean 규칙: 기본값 사용
  */
 export function generatePrettierConfig(rules: ConfigRule[]): PrettierConfig {
   const config: PrettierConfig = {};
 
   rules
-    .filter((r) => r.enabled && r.tool === 'prettier' && r.prettierOption)
+    .filter((r) => r.tool === 'prettier' && r.prettierOption)
     .forEach((r) => {
-      const { key, defaultValue } = r.prettierOption!;
-      config[key] = r.value !== undefined ? r.value : defaultValue;
+      const { key, defaultValue, type } = r.prettierOption!;
+
+      if (r.enabled) {
+        // 활성화된 규칙: 설정된 값 또는 기본값 사용
+        config[key] = r.value !== undefined ? r.value : defaultValue;
+      } else {
+        // 비활성화된 규칙: boolean이면 반대 값, 아니면 기본값 사용
+        if (type === 'boolean') {
+          config[key] = !defaultValue;
+        } else {
+          config[key] = defaultValue;
+        }
+      }
     });
 
   return config;
