@@ -41,6 +41,7 @@ export default function Home() {
             rules={currentRules}
             currentPresetId={state.currentPreset}
             onToggleRule={actions.toggleRule}
+            onUpdateRuleValue={actions.updateRuleValue}
             onPresetChange={actions.setCurrentPreset}
           />
 
