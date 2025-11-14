@@ -123,7 +123,7 @@ export default function RuleChecklist({
                 ))}
               </SelectContent>
             </Select>
-            <TooltipProvider>
+            <TooltipProvider delayDuration={0}>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
