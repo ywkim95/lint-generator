@@ -1,5 +1,6 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useConfigState } from '@/hooks/use-config-state';
 import { useCodePreview } from '@/hooks/use-code-preview';
 import { generateInstallCommands } from '@/lib/generators/command-generator';
@@ -10,13 +11,17 @@ import InstallCommands from '@/components/config/install-commands';
 
 export default function Home() {
   const { state, actions } = useConfigState();
-  const { exampleCode, isFormatting, error } = useCodePreview(
-    state.currentTool,
-    state.currentTool === 'prettier' ? state.prettierRules : state.eslintRules
+
+  // Memoize currentRules to prevent unnecessary re-renders
+  const currentRules = useMemo(
+    () => (state.currentTool === 'prettier' ? state.prettierRules : state.eslintRules),
+    [state.currentTool, state.prettierRules, state.eslintRules]
   );
 
-  const currentRules =
-    state.currentTool === 'prettier' ? state.prettierRules : state.eslintRules;
+  const { exampleCode, isFormatting, error } = useCodePreview(
+    state.currentTool,
+    currentRules
+  );
 
   const installCommands = generateInstallCommands(state.currentTool, currentRules);
 

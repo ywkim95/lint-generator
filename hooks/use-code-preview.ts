@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { ConfigRule } from '@/types/rule';
 import { ExampleCode } from '@/types/config';
 import { formatWithPrettier } from '@/lib/formatters/prettier-formatter';
@@ -27,15 +27,15 @@ export function useCodePreview(
   const [isFormatting, setIsFormatting] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced update function
-  const updatePreview = useCallback(
-    async (currentTool: 'prettier' | 'eslint', currentRules: ConfigRule[]) => {
+  // Debounce logic with preview update
+  useEffect(() => {
+    const timeoutId = setTimeout(async () => {
       setIsFormatting(true);
       setError(null);
 
       try {
-        if (currentTool === 'prettier') {
-          const config = generatePrettierConfig(currentRules);
+        if (tool === 'prettier') {
+          const config = generatePrettierConfig(rules);
           const formatted = await formatWithPrettier(sampleCode, config);
 
           setExampleCode({
@@ -46,7 +46,7 @@ export function useCodePreview(
           });
         } else {
           // ESLint 린팅
-          const config = generateESLintConfig(currentRules);
+          const config = generateESLintConfig(rules);
           const lintMessages = lintWithESLint(sampleCode, config);
 
           setExampleCode({
@@ -63,18 +63,10 @@ export function useCodePreview(
       } finally {
         setIsFormatting(false);
       }
-    },
-    []
-  );
-
-  // Debounce logic
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      updatePreview(tool, rules);
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [tool, rules, updatePreview]);
+  }, [tool, rules]);
 
   return { exampleCode, isFormatting, error };
 }
